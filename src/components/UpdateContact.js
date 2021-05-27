@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Button } from "@material-ui/core";
 import { TextField } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const useStyles = makeStyles({
@@ -24,38 +24,55 @@ const useStyles = makeStyles({
 	},
 });
 
-function AddContacts(props) {
+function UpdateContact(props) {
 	const classes = useStyles();
 	let [name, setName] = useState("");
 	let [phoneNo, setPhoneNo] = useState("");
 	let [email, setEmail] = useState("");
-	// console.log(props);
 	let history = useHistory();
+	const location = useLocation();
 
-	// const handleInput = (contact) => {
-	// 	setContacts([...contacts, contact]);
-	// };
+	useEffect(() => {
+		console.log("id: " + location.state.id);
+		async function getContact() {
+			let response = await axios.get(
+				"http://localhost:5000/updateContact/getContact",
+				{
+					params: {
+						id: location.state.id,
+					},
+				}
+			);
+			console.log(response);
+			setName(response.data.name);
+			setPhoneNo(response.data.phoneNo);
+			setEmail(response.data.email);
+		}
+		getContact();
+	}, []);
 
 	function submitForm() {
 		const contactDetails = {
+      _id: location.state.id,
 			name: name,
 			phoneNo: phoneNo,
 			email: email,
 		};
 
-		axios.post('http://localhost:5000/addContacts', contactDetails)
-		.then(function (response) {
-			console.log(response);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
+		axios
+			.put("http://localhost:5000/updateContact/update", contactDetails)
+			.then(function (response) {
+				console.log(response);
+			})
+			.catch(function (error) {
+				console.log(error);
+			});
 
 		// props.handleInput(contactDetails);
 		setName("");
 		setPhoneNo("");
 		setEmail("");
-		history.push('/contactList');
+		history.push("/contactList");
 	}
 
 	return (
@@ -67,7 +84,7 @@ function AddContacts(props) {
 				alignItems: "center",
 			}}
 		>
-			<h1 style={{ margin: "50px 0" }}>Add your Contacts Here</h1>
+			<h1 style={{ margin: "50px 0" }}>Update Your Contact</h1>
 			<form noValidate autoComplete="off" style={{ minWidth: "30%" }}>
 				<Box className={classes.areaField}>
 					<Box className={classes.label}>Name :</Box>
@@ -102,24 +119,11 @@ function AddContacts(props) {
 					className={classes.button}
 					onClick={submitForm}
 				>
-					Add Contact
+					Update Contact
 				</Button>
 			</form>
-			<div style={{ margin: "50px 0" }}>
-				<Button
-					variant="contained"
-					color="primary"
-					className={classes.button}
-					style={{}}
-					onClick={() => {
-						history.push("/contactList");
-					}}
-				>
-					Contact List
-				</Button>
-			</div>
 		</div>
 	);
 }
 
-export default AddContacts;
+export default UpdateContact;
